@@ -1,21 +1,66 @@
-/**
- * This is the main entrypoint to your Probot app
- * @param {import('probot').Probot} app
- */
+const axios = require("axios");
+
 module.exports = (app) => {
-  // Your code here
   app.log.info("Yay, the app was loaded!");
 
-  app.on("issues.opened", async (context) => {
-    const issueComment = context.issue({
-      body: "Thanks for opening this issue!",
-    });
-    return context.octokit.issues.createComment(issueComment);
+  app.on(["issue_comment.created", "pull_request.opened"], async (context) => {
+    const { comment, pull_request } = context.payload;
+
+    // Check if the comment or commit message contains the specific command ("/execute")
+    if (comment && comment.body.includes("/execute")) {
+      // Retrieve the code from the pull request
+      const code = await getCodeFromPullRequest(context, pull_request);
+
+      // Execute the code using the Piston API
+      const output = await executeCodeWithPiston(code);
+
+      // Post the output as a comment on the pull request
+      await createCommentOnPullRequest(context, pull_request, output);
+    }
   });
 
-  // For more information on building apps:
-  // https://probot.github.io/docs/
+  async function getCodeFromPullRequest(context, pull_request) {
+    // Retrieve the files modified in the pull request
+    const { data: files } = await context.octokit.pulls.listFiles({
+      owner: context.repo().owner,
+      repo: context.repo().repo,
+      pull_number: pull_request.number,
+    });
 
-  // To get your app running against GitHub, see:
-  // https://probot.github.io/docs/development/
+    // Retrieve the content of the first code file
+    if (files.length > 0) {
+      const file = files[0];
+      const { data: fileContent } = await context.octokit.repos.getContent({
+        owner: context.repo().owner,
+        repo: context.repo().repo,
+        path: file.filename,
+        ref: pull_request.head.sha,
+      });
+      return Buffer.from(fileContent.content, "base64").toString();
+    }
+
+    return null;
+  }
+
+  async function executeCodeWithPiston(code) {
+    try {
+      const response = await axios.post("https://emkc.org/api/v2/piston/execute", {
+        language: "javascript",
+        source: code,
+      });
+      return response.data.stdout || response.data.stderr || "";
+    } catch (error) {
+      app.log.error("Error executing code with Piston API:", error);
+      return "";
+    }
+  }
+
+  async function createCommentOnPullRequest(context, pull_request, comment) {
+    await context.octokit.issues.createComment({
+      owner: context.repo().owner,
+      repo: context.repo().repo,
+      issue_number: pull_request.number,
+      body: comment,
+    });
+  }
 };
