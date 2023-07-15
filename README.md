@@ -1,33 +1,38 @@
-# github-app
+# GitHub Project Summary
 
-> A GitHub App built with [Probot](https://github.com/probot/probot) that a description
+This GitHub project is a GitHub App built with Probot. It utilizes the Probot framework to perform a specific function. The main functionality of the app is to listen for two types of events: "issue_comment.created" and "pull_request.opened". 
 
-## Setup
+When one of these events is triggered, the app executes the following steps:
 
-```sh
-# Install dependencies
-npm install
+1. Log a message indicating that the app has been loaded.
+2. Check if the comment or commit message contains a specific command ("/execute").
+3. If the command is detected, retrieve the code from the pull request.
+4. Execute the retrieved code using the Piston API.
+5. Post the output of the executed code as a comment on the pull request.
 
-# Run the bot
-npm start
-```
+The project includes the following key components:
 
-## Docker
+## `getCodeFromPullRequest`:
+A function that retrieves the code from a pull request using the GitHub REST API.
 
-```sh
-# 1. Build container
-docker build -t github-app .
+## `executeCodeWithPiston`:
+A function that executes the retrieved code using the Piston API.
 
-# 2. Start container
-docker run -e APP_ID=<app-id> -e PRIVATE_KEY=<pem-value> github-app
-```
+## `createCommentOnPullRequest`:
+A function that creates a comment on the pull request using the GitHub REST API.
 
-## Contributing
+The project utilizes the `axios` library for making HTTP requests to the GitHub API and the `piston-client` library for interacting with the Piston API.
 
-If you have suggestions for how github-app could be improved, or want to report a bug, open an issue! We'd love all and any contributions.
+To set up and run the app, follow these steps:
 
-For more, check out the [Contributing Guide](CONTRIBUTING.md).
+### Install dependencies
+`npm install`
 
-## License
+### Run the bot
+`npm start`
 
-[ISC](LICENSE) © 2023 nitesh sinwar
+
+
+
+
+
