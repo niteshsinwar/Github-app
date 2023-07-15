@@ -16,7 +16,11 @@
     "test": "jest"
   },
   "dependencies": {
+    "@babel/core": "^7.22.9",
+    "@babel/preset-env": "^7.22.9",
+    "@babel/register": "^7.22.5",
     "axios": "^1.4.0",
+    "piston-client": "^1.0.2",
     "probot": "^12.2.4"
   },
   "devDependencies": {
